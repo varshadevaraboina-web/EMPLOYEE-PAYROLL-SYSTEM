@@ -1,0 +1,271 @@
+package payrollsystem;
+
+import java.io.*;
+import java.util.*;
+
+public class PayrollSystem implements Serializable {
+    
+
+    // ---------------- Employee Fields ----------------
+    private int id;
+    private String name;
+    private String phone;
+    private String place;
+    private int pincode;
+    private String aadhar;
+    private String pancard;
+    private String designation;
+    private double basicSalary;
+    private double netSalary;
+
+    // ---------------- Constructor ----------------
+    public PayrollSystem(int id, String name, String phone, String place, int pincode,
+                         String aadhar, String pancard, String designation, double basicSalary) {
+        this.id = id;
+        this.name = name;
+        this.phone = phone;
+        this.place = place;
+        this.pincode = pincode;
+        this.aadhar = aadhar;
+        this.pancard = pancard;
+        this.designation = designation;
+        this.basicSalary = basicSalary;
+        calculateNetSalary();
+    }
+
+    // ---------------- Salary Calculation ----------------
+    private void calculateNetSalary() {
+        double hra = 0.20 * basicSalary;
+        double da = 0.10 * basicSalary;
+        double pf = 0.08 * basicSalary;
+        netSalary = basicSalary + hra + da - pf;
+    }
+
+    // ---------------- Getters ----------------
+    public double getNetSalary() {
+        return netSalary;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    // ---------------- toString for File Output ----------------
+    @Override
+    public String toString() {
+        return id + "," + name + "," + phone + "," + place + "," + pincode + "," +
+                aadhar + "," + pancard + "," + designation + "," + basicSalary + "," + netSalary;
+    }
+
+    // ---------------- Display Method ----------------
+    public void display() {
+        System.out.println("---------------------------------------------");
+        System.out.println("Employee ID       : " + id);
+        System.out.println("Name              : " + name);
+        System.out.println("Phone             : " + phone);
+        System.out.println("Place             : " + place);
+        System.out.println("Pincode           : " + pincode);
+        System.out.println("Aadhar            : " + aadhar);
+        System.out.println("PAN Card          : " + pancard);
+        System.out.println("Designation       : " + designation);
+        System.out.println("Basic Salary      : " + basicSalary);
+        System.out.println("Net Salary        : " + netSalary);
+        System.out.println("---------------------------------------------");
+    }
+
+    // ---------------- Static Data ----------------
+    static ArrayList<PayrollSystem> employees = new ArrayList<>();
+    static final String FILE_NAME = "payrollsystem.txt";
+
+    // ---------------- Add Fixed Employees ----------------
+    static void addFixedEmployees() {
+        // Clear and load default list every time to ensure all are displayed
+        employees.clear();
+        employees.add(new PayrollSystem(101, "Varsha", "9876543210", "Hyderabad", 500001, "111122223333", "ABCDE1234F", "Developer", 30000));
+        employees.add(new PayrollSystem(102, "Navya", "9998887776", "Warangal", 506001, "222233334444", "FGHIJ5678K", "Tester", 28000));
+        employees.add(new PayrollSystem(103, "Shailaja", "8887776665", "Karimnagar", 505001, "333344445555", "KLMNO9012P", "Manager", 40000));
+        employees.add(new PayrollSystem(104, "Ram", "7776665554", "Nizamabad", 503001, "444455556666", "PQRST3456L", "Clerk", 22000));
+        employees.add(new PayrollSystem(105, "Suresh", "6665554443", "Nirmal", 504001, "555566667777", "UVWXY7890Z", "HR", 35000));
+    }
+
+    // ---------------- Display All Employees ----------------
+    static void displayAll() {
+        if (employees.isEmpty()) {
+            System.out.println("⚠️ No employees found. Loading fixed employees...");
+            addFixedEmployees();
+        }
+
+        System.out.println("\n========= ALL EMPLOYEES =========");
+        for (PayrollSystem e : employees) {
+            e.display();
+        }
+    }
+
+    // ---------------- Display All Names ----------------
+    static void displayAllNames() {
+        if (employees.isEmpty()) {
+            System.out.println("⚠️ No employees found. Loading fixed employees...");
+            addFixedEmployees();
+        }
+
+        System.out.println("========= EMPLOYEE NAMES =========");
+        for (PayrollSystem e : employees) {
+            System.out.println("👤 " + e.getName());
+        }
+    }
+
+    // ---------------- Search by ID ----------------
+    static void searchEmployee(Scanner sc) {
+        System.out.print("Enter Employee ID to search: ");
+        int id = sc.nextInt();
+        boolean found = false;
+        for (PayrollSystem e : employees) {
+            if (e.getId() == id) {
+                e.display();
+                found = true;
+                break;
+            }
+        }
+        if (!found) System.out.println("❌ Employee not found!");
+    }
+
+    // ---------------- Save to File ----------------
+    static void saveToFile() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
+            for (PayrollSystem e : employees) {
+                bw.write(e.toString());
+                bw.newLine();
+            }
+            System.out.println("✅ All employee data saved to " + FILE_NAME);
+        } catch (IOException ex) {
+            System.out.println("❌ Error saving file: " + ex.getMessage());
+        }
+    }
+
+    // ---------------- Load from File ----------------
+    static void loadFromFile() {
+        employees.clear();
+        File file = new File(FILE_NAME);
+        if (!file.exists()) {
+            System.out.println("ℹ️ File not found, loading fixed employees...");
+            addFixedEmployees();
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length >= 9) {
+                    employees.add(new PayrollSystem(
+                            Integer.parseInt(data[0]), data[1], data[2], data[3],
+                            Integer.parseInt(data[4]), data[5], data[6], data[7],
+                            Double.parseDouble(data[8])
+                    ));
+                }
+            }
+            System.out.println("✅ Employee data loaded from " + FILE_NAME);
+        } catch (IOException e) {
+            System.out.println("❌ Error loading file: " + e.getMessage());
+        }
+    }
+
+    // ---------------- Generate Payslip ----------------
+    static void generatePayslip(Scanner sc) {
+        System.out.print("Enter Employee ID for payslip: ");
+        int id = sc.nextInt();
+        for (PayrollSystem e : employees) {
+            if (e.getId() == id) {
+                System.out.println("\n========== PAYSLIP ==========");
+                System.out.println("Employee ID  : " + e.id);
+                System.out.println("Name         : " + e.name);
+                System.out.println("Designation  : " + e.designation);
+                System.out.println("Basic Salary : " + e.basicSalary);
+                System.out.println("Net Salary   : " + e.netSalary);
+                System.out.println("=============================");
+                return;
+            }
+        }
+        System.out.println("❌ Employee not found!");
+    }
+
+    // ---------------- Add Employee Manually ----------------
+    static void addEmployee(Scanner sc) {
+        try {
+            System.out.print("Enter ID: ");
+            int id = sc.nextInt();
+            sc.nextLine();
+
+            for (PayrollSystem e : employees) {
+                if (e.getId() == id) {
+                    System.out.println("❌ Employee ID already exists!");
+                    return;
+                }
+            }
+
+            System.out.print("Enter Name: ");
+            String name = sc.nextLine();
+            System.out.print("Enter Phone: ");
+            String phone = sc.nextLine();
+            System.out.print("Enter Place: ");
+            String place = sc.nextLine();
+            System.out.print("Enter Pincode: ");
+            int pincode = sc.nextInt();
+            sc.nextLine();
+            System.out.print("Enter Aadhar: ");
+            String aadhar = sc.nextLine();
+            System.out.print("Enter PAN Card: ");
+            String pancard = sc.nextLine();
+            System.out.print("Enter Designation: ");
+            String designation = sc.nextLine();
+            System.out.print("Enter Basic Salary: ");
+            double basicSalary = sc.nextDouble();
+
+            employees.add(new PayrollSystem(id, name, phone, place, pincode, aadhar, pancard, designation, basicSalary));
+            System.out.println("✅ Employee Added Successfully!");
+        } catch (InputMismatchException e) {
+            System.out.println("❌ Invalid input. Please enter correct values.");
+            sc.nextLine();
+        }
+    }
+
+    // ---------------- Main Menu ----------------
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        addFixedEmployees(); // Always load fixed employees first
+
+        int choice;
+        do {
+            System.out.println("\n========== EMPLOYEE PAYROLL SYSTEM ==========");
+            System.out.println("1. Add Employee");
+            System.out.println("2. Display All Employees (Full Details)");
+            System.out.println("3. Display All Employee Names");
+            System.out.println("4. Search Employee by ID");
+            System.out.println("5. Generate Payslip");
+            System.out.println("6. Save to File");
+            System.out.println("7. Load from File");
+            System.out.println("8. Exit");
+            System.out.print("Enter your choice: ");
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1 -> addEmployee(sc);
+                case 2 -> displayAll();
+                case 3 -> displayAllNames();
+                case 4 -> searchEmployee(sc);
+                case 5 -> generatePayslip(sc);
+                case 6 -> saveToFile();
+                case 7 -> loadFromFile();
+                case 8 -> System.out.println("👋 Exiting... Thank you!");
+                default -> System.out.println("❌ Invalid choice! Try again.");
+            }
+
+        } while (choice != 8);
+
+        sc.close();
+    }
+}
